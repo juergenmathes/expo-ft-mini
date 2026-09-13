@@ -15,7 +15,7 @@ CLI instead:
 
 ```bash
 just docker dev
-docker run -it --rm --gpus all -v $PWD:/workspace d3il-flow:dev bash
+just shell        # runs as your uid, so .venv in the bind mount is writable
 just setup
 ```
 

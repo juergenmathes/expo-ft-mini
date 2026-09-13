@@ -55,6 +55,16 @@ fmt:
 docker target="runtime":
     docker build -f .devcontainer/Dockerfile --target {{target}} --build-arg TORCH_EXTRA={{torch}} -t d3il-flow:{{target}} .
 
+# Shell in the dev image as your own uid, so .venv in the bind mount stays writable
+# (VS Code does this via updateRemoteUserUID; plain `docker run` does not).
+shell:
+    docker run -it --rm --gpus all \
+      -v "$PWD:/workspace" -w /workspace \
+      -u "$(id -u):$(id -g)" \
+      -e HOME=/tmp -e UV_CACHE_DIR=/tmp/uv-cache \
+      -e TORCH_EXTRA={{torch}} \
+      d3il-flow:dev bash
+
 clean:
     rm -rf outputs/* .ruff_cache
 
