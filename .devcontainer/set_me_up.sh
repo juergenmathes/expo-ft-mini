@@ -10,13 +10,7 @@ DOWNLOAD_DATA="${DOWNLOAD_DATA:-0}"                                # 1 -> pull a
 
 log() { printf '\033[1;34m[set_me_up]\033[0m %s\n' "$*"; }
 
-# updateRemoteUserUID remaps vscode to the host uid; /opt/venv was chown'd to 1000 at image build.
-if [ ! -w "${UV_PROJECT_ENVIRONMENT:-/opt/venv}" ] && command -v sudo >/dev/null 2>&1; then
-  log "fixing ownership of /opt/venv /opt/uv for uid $(id -u)"
-  sudo chown -R "$(id -u):$(id -g)" /opt/venv /opt/uv
-fi
-
-# 1) D3IL fork (editable path dep of pyproject.toml). The bind mount hides the copy baked into the image.
+# 1) D3IL fork (editable path dep of pyproject.toml). Bound workspace; not baked into the image.
 if [ ! -f third_party/d3il/environments/d3il/setup.py ]; then
   log "cloning D3IL fork -> third_party/d3il @ ${D3IL_REF:0:8}"
   rm -rf third_party/d3il
@@ -26,7 +20,7 @@ else
   log "third_party/d3il present"
 fi
 
-# 2) venv: /opt/venv already holds the deps from the image; this (re)links the editable packages + project.
+# 2) workspace .venv (owned by vscode after UID remap; uv cache is a named volume)
 log "uv sync --extra ${TORCH_EXTRA} --extra dev"
 if [ -f uv.lock ]; then uv sync --frozen --extra "$TORCH_EXTRA" --extra dev; else uv sync --extra "$TORCH_EXTRA" --extra dev; fi
 

@@ -3,18 +3,13 @@
   "build": {
     "dockerfile": "Dockerfile",
     "context": "..",
-    "target": "dev",
-    "args": {
-      // export TORCH_EXTRA=cu124 (or cu128 for Blackwell/sm_120) on the host before "Reopen in Container"
-      "TORCH_EXTRA": "${localEnv:TORCH_EXTRA:cpu}"
-    }
+    "target": "dev"
   },
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
   "remoteUser": "vscode",
   "updateRemoteUserUID": true,
 
-  // adds --gpus all when the host has one; silently skipped otherwise
   "hostRequirements": { "gpu": "optional" },
   "runArgs": ["--shm-size=8g", "--init"],
 
@@ -23,7 +18,6 @@
   ],
 
   "containerEnv": {
-    "UV_PROJECT_ENVIRONMENT": "/opt/venv",
     "DPPO_DATA_DIR": "/workspace/data",
     "TORCH_EXTRA": "${localEnv:TORCH_EXTRA:cpu}",
     "WANDB_API_KEY": "${localEnv:WANDB_API_KEY}"
@@ -46,7 +40,7 @@
         "eamodio.gitlens"
       ],
       "settings": {
-        "python.defaultInterpreterPath": "/opt/venv/bin/python",
+        "python.defaultInterpreterPath": "/workspace/.venv/bin/python",
         "python.terminal.activateEnvironment": true,
         "python.analysis.extraPaths": [
           "/workspace/src",

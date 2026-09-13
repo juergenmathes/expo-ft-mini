@@ -1,4 +1,4 @@
-# vendored at setup time (pinned in Dockerfile / set_me_up.sh)
+# vendored at setup time (pinned in set_me_up.sh)
 third_party/
 # uv / python
 .venv/
