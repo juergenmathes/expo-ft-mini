@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1.7
 # d3il-flow: flow-matching policies on D3IL Avoiding
-#   base    - Debian + GL libs for MuJoCo (EGL / OSMesa) + uv + uv-managed CPython 3.10
+#   base    - Microsoft vscode Debian + GL libs for MuJoCo (EGL / OSMesa) + uv + uv-managed CPython 3.10
 #   deps    - /opt/venv with all third-party deps (project itself NOT installed -> cache-friendly)
-#   dev     - devcontainer target: non-root user, just, sudo, dev extras
-#   runtime - slim image with the project installed; `docker run d3il-flow:runtime --help`
+#   dev     - devcontainer target: USER vscode, just, uv cache in $HOME
+#   runtime - slim-ish image with the project installed; `docker run d3il-flow:runtime --help`
 #
 #   docker build -f .devcontainer/Dockerfile --target dev --build-arg TORCH_EXTRA=cu128 -t d3il-flow:dev .
 #   TORCH_EXTRA: cpu | cu124 | cu128 (cu128 = torch 2.8, required for Blackwell / sm_120)
@@ -15,11 +15,12 @@ ARG UV_VERSION=0.11
 FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uvbin
 
 # ------------------------------------------------------------------------------------------------ base
-FROM debian:bookworm-slim AS base
+# vscode user, sudo, git, zsh already in this image; updateRemoteUserUID remaps vscode to the host uid.
+FROM mcr.microsoft.com/devcontainers/base:bookworm AS base
 ARG PYTHON_VERSION
+USER root
 ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8 LC_ALL=C.UTF-8 TZ=Europe/Berlin
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        ca-certificates curl git git-lfs openssh-client \
         # MuJoCo / glfw / OpenCV runtime libs; EGL for GPU hosts, OSMesa + llvmpipe for CPU-only hosts
         libgl1 libgl1-mesa-dri libglew2.2 libosmesa6 libegl1 libgles2 libglfw3 \
         libglib2.0-0 libsm6 libxext6 libxrender1 libxrandr2 libxinerama1 libxcursor1 libxi6 libxxf86vm1 \
@@ -59,19 +60,11 @@ ENV PATH=/opt/venv/bin:${PATH}
 
 # ------------------------------------------------------------------------------------------------ dev
 FROM deps AS dev
-ARG USERNAME=dev
-ARG UID=1000
-ARG GID=1000
-RUN apt-get update && apt-get install -y --no-install-recommends sudo less vim-tiny htop procps rsync unzip zsh \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin \
-    && groupadd -g ${GID} ${USERNAME} \
-    && useradd -m -u ${UID} -g ${GID} -s /bin/bash ${USERNAME} \
-    && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} \
-    && chown -R ${UID}:${GID} /opt/venv /opt/uv /workspace
-USER ${USERNAME}
-ENV HOME=/home/${USERNAME} \
-    UV_CACHE_DIR=/home/${USERNAME}/.cache/uv \
+RUN curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin \
+    && chown -R vscode:vscode /opt/venv /opt/uv /workspace
+USER vscode
+ENV HOME=/home/vscode \
+    UV_CACHE_DIR=/home/vscode/.cache/uv \
     DPPO_DATA_DIR=/workspace/data \
     PYTHONUNBUFFERED=1
 RUN mkdir -p ${UV_CACHE_DIR} && git config --global --add safe.directory /workspace

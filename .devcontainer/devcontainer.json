@@ -6,14 +6,12 @@
     "target": "dev",
     "args": {
       // export TORCH_EXTRA=cu124 (or cu128 for Blackwell/sm_120) on the host before "Reopen in Container"
-      "TORCH_EXTRA": "${localEnv:TORCH_EXTRA:cpu}",
-      "UID": "${localEnv:UID:1000}",
-      "GID": "${localEnv:GID:1000}"
+      "TORCH_EXTRA": "${localEnv:TORCH_EXTRA:cpu}"
     }
   },
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-  "remoteUser": "dev",
+  "remoteUser": "vscode",
   "updateRemoteUserUID": true,
 
   // adds --gpus all when the host has one; silently skipped otherwise
@@ -21,7 +19,7 @@
   "runArgs": ["--shm-size=8g", "--init"],
 
   "mounts": [
-    "source=d3il-flow-uv-cache,target=/home/dev/.cache/uv,type=volume"
+    "source=d3il-flow-uv-cache,target=/home/vscode/.cache/uv,type=volume"
   ],
 
   "containerEnv": {
