@@ -1,0 +1,8 @@
+.git
+.venv
+data
+outputs
+wandb
+third_party
+**/__pycache__
+.ruff_cache

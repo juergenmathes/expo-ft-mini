@@ -1,0 +1,13 @@
+# vendored at setup time (pinned in Dockerfile / set_me_up.sh)
+third_party/
+# uv / python
+.venv/
+__pycache__/
+*.py[cod]
+.ruff_cache/
+*.egg-info/
+# data & runs
+data/
+outputs/
+wandb/
+.env

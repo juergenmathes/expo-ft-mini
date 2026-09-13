@@ -1,0 +1,69 @@
+{
+  "name": "d3il-flow",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "..",
+    "target": "dev",
+    "args": {
+      // export TORCH_EXTRA=cu124 (or cu128 for Blackwell/sm_120) on the host before "Reopen in Container"
+      "TORCH_EXTRA": "${localEnv:TORCH_EXTRA:cpu}",
+      "UID": "${localEnv:UID:1000}",
+      "GID": "${localEnv:GID:1000}"
+    }
+  },
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "remoteUser": "dev",
+  "updateRemoteUserUID": true,
+
+  // adds --gpus all when the host has one; silently skipped otherwise
+  "hostRequirements": { "gpu": "optional" },
+  "runArgs": ["--shm-size=8g", "--init"],
+
+  "mounts": [
+    "source=d3il-flow-uv-cache,target=/home/dev/.cache/uv,type=volume"
+  ],
+
+  "containerEnv": {
+    "UV_PROJECT_ENVIRONMENT": "/opt/venv",
+    "DPPO_DATA_DIR": "/workspace/data",
+    "TORCH_EXTRA": "${localEnv:TORCH_EXTRA:cpu}",
+    "WANDB_API_KEY": "${localEnv:WANDB_API_KEY}"
+  },
+
+  "postCreateCommand": "bash .devcontainer/set_me_up.sh",
+  "postStartCommand": "git -C /workspace/third_party/d3il rev-parse --short HEAD 2>/dev/null || true",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.debugpy",
+        "charliermarsh.ruff",
+        "ms-toolsai.jupyter",
+        "tamasfe.even-better-toml",
+        "skellock.just",
+        "ms-azuretools.vscode-docker",
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/opt/venv/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "python.analysis.extraPaths": [
+          "/workspace/src",
+          "/workspace/third_party/d3il/environments/d3il",
+          "/workspace/third_party/d3il/environments/d3il/envs/gym_avoiding_env"
+        ],
+        "python.analysis.typeCheckingMode": "basic",
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": { "source.organizeImports.ruff": "explicit" }
+        },
+        "files.exclude": { "**/__pycache__": true, "**/.ruff_cache": true },
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}
